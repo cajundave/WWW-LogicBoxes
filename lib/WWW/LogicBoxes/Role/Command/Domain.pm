@@ -341,7 +341,7 @@ sub renew_domain {
     };
 }
 
-sub resend_verification_email{
+sub verification_status{
     my $self = shift;
     my ( %args ) = validated_hash(
         \@_,
@@ -356,12 +356,31 @@ sub resend_verification_email{
                 'options'  => 'DomainStatus'
             }
         });
+        return $response->{raaVerificationStatus};
+    }
+    catch {
+        if( $_ =~ m/No Entity found for Entityid/ ) {
+            croak 'No such domain';
+        }
+        croak $_;
+    };
+}
 
-        if( $response->{raaVerificationStatus} eq 'Verified' ){
+sub resend_verification_email{
+    my $self = shift;
+    my ( %args ) = validated_hash(
+        \@_,
+        id => { isa => Int },
+    );
+
+    return try {
+        my $verification_status = $self->verification_status( id => $args{id} );
+
+        if( $verification_status eq 'Verified' ){
             croak 'Domain already verified';
         }
 
-        $response = $self->submit({
+        my $response = $self->submit({
             method => 'domains__raa__resend_verification',
             params => {
                 'order-id' => $args{id}

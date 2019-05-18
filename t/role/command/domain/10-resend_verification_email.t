@@ -23,15 +23,11 @@ subtest 'Resend Email Verification For Domain That Does Not Exist - Throws Excep
 
 subtest 'Resend Email Verification For Domain That Does Not Need It - Throws Exception' => sub {
     my $domain        = create_domain();
-    my $mocked_submit = Test::MockModule->new('WWW::LogicBoxes');
+    my $mocked_submit = Test::MockModule->new('WWW::LogicBoxes::Role::Command::Domain');
     $mocked_submit->mock(
-        'submit',
+        'verification_status',
         sub {
-            my $args = $_[1];
-            if ( $args->{method} eq 'domains__details' ) {
-                return { raaVerificationStatus => 'Verified' };
-            }
-            $mocked_submit->original('submit')->(@_);
+            return 'Verified';
         }
     );
     throws_ok {
@@ -47,8 +43,8 @@ subtest 'Resend Email Verification For Domain Requiring Verification - Successfu
     my $response;
     lives_ok {
         $response = $logic_boxes->resend_verification_email( id => $domain->id );
-    };
-    ok( $response == 1, 'Responded with True' );
+    } 'Lives through resend request';
+    ok( $response, 'Responded with True' );
 };
 
 done_testing;
