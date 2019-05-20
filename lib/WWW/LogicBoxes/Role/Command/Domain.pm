@@ -387,20 +387,22 @@ sub resend_verification_email{
             }
         });
         if( $response->{result} eq 'true' ){
-            return 1;
+            return;
         }
-        elsif( $response->{result} eq 'false' ){
-            return 0;
+        else{
+            croak 'Could not detect verification email sent';
         }
     }
     catch {
-        if( $_ =~ m/You are not allowed to perform this action/ ) {
+        if( $_ =~ m/^You are not allowed to perform this action/ ) {
             croak 'No matching order found';
         }
-        if( $_ =~ m/No Entity found for Entityid/ ) {
+        elsif( $_ =~ m/^No Entity found for Entityid/ ) {
             croak 'No such domain';
         }
-        croak $_;
+        else{
+            croak $_;
+        }
     };
 }
 
@@ -646,11 +648,19 @@ Returns an instance of the domain object.
 =head2 resend_verification_email
 
     use WWW::LogicBoxes;
-    use WWW::LogicBooxes::Domain;
 
     my $logic_boxes = WWW::LogicBoxe->new( ... );
     $logic_boxes->resend_verification_email( id => $domain->id );
 
-Given an Integer L<domain|WWW::LogicBoxes::Domain> id, resends Verification email. Returns true if executed successfully or false if not
+Given an Integer L<domain|WWW::LogicBoxes::Domain> id, resends Verification email. Returns undef or croaks with an error if Logicboxes does not respond with a true for sent.
+
+=head2 verification_status
+
+    use WWW::LogicBoxes;
+
+    my $logic_boxes = WWW::LogicBoxe->new( ... );
+    $logic_boxes->verification_status( id => $domain->id );
+
+Given an integer, L<domain|WWW::LogicBoxes::Domain> id, returns raaVerificationStatus.  This is Pending, Active, or Suspended. Uses one api call as opposed to the several that WWW::LogicBoxes::Domain would use to build its object and have the verification_status attribute.
 
 =cut

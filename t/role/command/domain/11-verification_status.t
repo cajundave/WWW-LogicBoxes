@@ -12,11 +12,14 @@ use lib "$FindBin::Bin/../../../lib";
 use Test::WWW::LogicBoxes::Domain qw( create_domain );
 use Test::WWW::LogicBoxes qw( create_api );
 
+use Readonly;
+Readonly my $FAKE_ID => -1;
+
 my $logic_boxes = create_api;
 
 subtest 'Verification status for domain that does not exist - throws exception' => sub {
     throws_ok {
-        $logic_boxes->verification_status( id => 999999999 );
+        $logic_boxes->verification_status( id => $FAKE_ID );
     }
     qr/No such domain/;
 };
